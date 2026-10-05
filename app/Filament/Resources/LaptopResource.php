@@ -6,9 +6,11 @@ use App\Filament\Resources\LaptopResource\Pages;
 use App\Models\Laptop;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class LaptopResource extends Resource
 {
@@ -16,76 +18,74 @@ class LaptopResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-computer-desktop';
 
+    protected static ?string $navigationGroup = 'Katalog Toko';
+
+    protected static ?string $navigationLabel = 'Stok Laptop Bekas';
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\FileUpload::make('image')
-                    ->image()
-                    ->directory('laptops')
-                    ->columnSpanFull()
-                    ->label('Foto Laptop'),
-                Forms\Components\Select::make('brand_id')
-                    ->relationship('brand', 'name')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->label('Merek Laptop'),
+                Forms\Components\Section::make('Informasi Unit')
+                    ->schema([
+                        Forms\Components\Select::make('brand_id')
+                            ->relationship('brand', 'name')
+                            ->required()
+                            ->label('Merek'),
 
-                Forms\Components\TextInput::make('title')
-                    ->required()
-                    ->placeholder('Contoh: ASUS ROG Strix G15')
-                    ->label('Nama Produk'),
+                        Forms\Components\TextInput::make('title')
+                            ->required()
+                            ->label('Judul Produk')
+                            ->placeholder('Contoh: Asus ROG Strix G15 (2022)')
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state))),
 
-                Forms\Components\TextInput::make('serial_number')
-                    ->label('Nomor Seri (SN)'),
+                        Forms\Components\TextInput::make('slug')
+                            ->required()
+                            ->readOnly(),
 
-                Forms\Components\TextInput::make('processor')
-                    ->required()
-                    ->placeholder('Contoh: Intel Core i7-11800H'),
+                        Forms\Components\TextInput::make('price')
+                            ->required()
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->label('Harga Jual'),
 
-                Forms\Components\TextInput::make('ram')
-                    ->required()
-                    ->placeholder('Contoh: 16GB DDR4'),
+                        Forms\Components\Select::make('condition_grade')
+                            ->options([
+                                'Like New' => 'Like New (99% Mulus)',
+                                'Mulus' => 'Mulus (90-95%)',
+                                'Pemakaian Normal' => 'Pemakaian Normal',
+                            ])
+                            ->default('Like New')
+                            ->required()
+                            ->label('Kondisi Fisik'),
 
-                Forms\Components\TextInput::make('storage')
-                    ->required()
-                    ->placeholder('Contoh: 512GB NVMe SSD'),
+                        Forms\Components\Select::make('status')
+                            ->options([
+                                'available' => 'Tersedia (Ready Stock)',
+                                'sold' => 'Terjual (Sold Out)',
+                            ])
+                            ->default('available')
+                            ->required(),
+                    ])->columns(2),
 
-                Forms\Components\TextInput::make('vga')
-                    ->placeholder('Contoh: NVIDIA RTX 3060 6GB'),
+                Forms\Components\Section::make('Spesifikasi & Foto')
+                    ->schema([
+                        Forms\Components\TextInput::make('processor')->required()->placeholder('Intel Core i7-11800H'),
+                        Forms\Components\TextInput::make('ram')->required()->placeholder('16GB DDR4'),
+                        Forms\Components\TextInput::make('storage')->required()->placeholder('512GB NVMe SSD'),
+                        Forms\Components\TextInput::make('gpu')->placeholder('NVIDIA RTX 3060 6GB'),
 
-                Forms\Components\TextInput::make('screen_size')
-                    ->placeholder('Contoh: 15.6 FHD 144Hz'),
+                        Forms\Components\FileUpload::make('photo')
+                            ->image()
+                            ->directory('laptops')
+                            ->columnSpanFull()
+                            ->label('Foto Utama Laptop'),
 
-                Forms\Components\Select::make('condition_grade')
-                    ->options([
-                        'A' => 'Grade A (Mulus / Seperti Baru)',
-                        'B' => 'Grade B (Baret Halus / Pemakaian Normal)',
-                        'C' => 'Grade C (Ada Minus Fisik/Fungsi)',
-                    ])
-                    ->default('A')
-                    ->required()
-                    ->label('Kondisi Unit'),
-
-                Forms\Components\TextInput::make('price')
-                    ->numeric()
-                    ->prefix('Rp')
-                    ->required()
-                    ->label('Harga Jual'),
-
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'available' => 'Tersedia',
-                        'booked' => 'Dibooking',
-                        'sold' => 'Terjual',
-                    ])
-                    ->default('available')
-                    ->required(),
-
-                Forms\Components\Textarea::make('description')
-                    ->columnSpanFull()
-                    ->label('Deskripsi / Kelengkapan'),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Deskripsi Lengkap & Kelengkapan')
+                            ->columnSpanFull(),
+                    ])->columns(2),
             ]);
     }
 
@@ -93,51 +93,38 @@ class LaptopResource extends Resource
     {
         return $table
             ->columns([
-
-                Tables\Columns\ImageColumn::make('image')->label('Foto'),
-                Tables\Columns\TextColumn::make('brand.name')
-                    ->sortable()
-                    ->searchable()
-                    ->label('Merek'),
+                Tables\Columns\ImageColumn::make('photo')
+                    ->label('Foto'),
 
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()
+                    ->sortable()
                     ->label('Nama Laptop'),
 
-                Tables\Columns\TextColumn::make('processor')
-                    ->label('Prosesor'),
-
-                Tables\Columns\TextColumn::make('ram')
-                    ->label('RAM'),
-
-                Tables\Columns\TextColumn::make('storage')
-                    ->label('Storage'),
+                Tables\Columns\TextColumn::make('brand.name')
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('price')
                     ->money('IDR')
                     ->sortable()
-                    ->label('Harga Jual'),
+                    ->label('Harga'),
 
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'available' => 'success',
-                        'booked' => 'warning',
-                        'sold' => 'danger',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                Tables\Columns\BadgeColumn::make('status')
+                    ->colors([
+                        'success' => 'available',
+                        'danger' => 'sold',
+                    ]),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
                         'available' => 'Tersedia',
-                        'booked' => 'Dibooking',
                         'sold' => 'Terjual',
-                    }),
+                    ]),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array

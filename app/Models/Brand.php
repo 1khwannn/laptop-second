@@ -9,7 +9,7 @@ class Brand extends Model
 {
     protected $fillable = ['name', 'slug'];
 
-    public function laptops(): HasMany
+    public function laptops()
     {
         return $this->hasMany(Laptop::class);
     }

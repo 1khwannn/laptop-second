@@ -2,23 +2,26 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Laptop extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'brand_id',
         'title',
-        'serial_number',
+        'slug',
         'processor',
         'ram',
         'storage',
-        'vga',
-        'screen_size',
+        'gpu',
+        'price',
         'condition_grade',
         'description',
-        'price',
+        'photo',
         'status',
     ];
 
