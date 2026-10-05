@@ -7,9 +7,17 @@ use App\Http\Controllers\CatalogController;
 use App\Models\LaptopOffer;
 use App\Models\laptop;
 use App\Models\Brand;
+use App\Models\Offer;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::middleware(['auth'])->group(function () {
+    // Route cetak nota buyback
+    Route::get('/offers/{offer}/receipt', function (Offer $offer) {
+        return view('offers.receipt', compact('offer'));
+    })->name('offers.receipt');
+});
 
 Route::get('/', function () {
     $featuredLaptops = Laptop::with('brand')

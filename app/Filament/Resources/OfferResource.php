@@ -3,74 +3,70 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OfferResource\Pages;
-use App\Models\Laptop;
 use App\Models\Offer;
+use App\Models\Laptop;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
 
 class OfferResource extends Resource
 {
     protected static ?string $model = Offer::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
-
+    protected static ?string $navigationIcon = 'heroicon-o-inbox-arrow-down';
     protected static ?string $navigationGroup = 'Transaksi & Buyback';
-
     protected static ?string $navigationLabel = 'Penawaran Masuk';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Detail Penawaran Pelanggan')
+                Forms\Components\Section::make('Informasi Laptop Penawaran')
                     ->schema([
                         Forms\Components\Select::make('brand_id')
                             ->relationship('brand', 'name')
-                            ->disabled()
-                            ->label('Merek'),
-
+                            ->required()
+                            ->disabled(),
                         Forms\Components\TextInput::make('model_name')
-                            ->disabled()
-                            ->label('Tipe / Seri Laptop'),
-
-                        Forms\Components\TextInput::make('processor')->disabled(),
-                        Forms\Components\TextInput::make('ram')->disabled(),
-                        Forms\Components\TextInput::make('storage')->disabled(),
-
-                        Forms\Components\TextInput::make('expected_price')
-                            ->numeric()
-                            ->prefix('Rp')
-                            ->disabled()
-                            ->label('Ekspektasi Harga User'),
-
-                        Forms\Components\Textarea::make('condition_description')
-                            ->disabled()
+                            ->required()
+                            ->disabled(),
+                        Forms\Components\TextInput::make('phone_number')
+                            ->label('Nomor Telepon / WhatsApp')
+                            ->tel()
+                            ->disabled(),
+                        Forms\Components\Textarea::make('description')
                             ->columnSpanFull()
-                            ->label('Deskripsi Kondisi dari User'),
+                            ->disabled(),
+                        Forms\Components\FileUpload::make('image')
+                            ->image()
+                            ->disabled(),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Respon Toko / Admin')
+                Forms\Components\Section::make('Penilaian & Negosiasi Toko')
                     ->schema([
-                        Forms\Components\TextInput::make('admin_offer_price')
-                            ->numeric()
+                        Forms\Components\TextInput::make('expected_price')
+                            ->label('Ekspektasi Harga User')
                             ->prefix('Rp')
-                            ->required()
-                            ->label('Harga Taksiran Toko'),
-
+                            ->numeric()
+                            ->disabled(),
+                        Forms\Components\TextInput::make('admin_offer_price')
+                            ->label('Harga Taksiran Toko')
+                            ->prefix('Rp')
+                            ->numeric()
+                            ->required(),
                         Forms\Components\Select::make('status')
                             ->options([
-                                'pending' => 'Pending (Belum Direspon)',
-                                'negotiating' => 'Dalam Negosiasi',
-                                'accepted' => 'Disetujui / Deal',
+                                'pending' => 'Pending',
+                                'negotiating' => 'Negosiasi',
+                                'accepted' => 'Disetujui',
                                 'rejected' => 'Ditolak',
                                 'completed' => 'Selesai (Sudah Dibeli)',
                             ])
                             ->required(),
-                    ])->columns(2),
+                    ])->columns(3),
             ]);
     }
 
@@ -79,68 +75,84 @@ class OfferResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Tanggal')
                     ->dateTime('d M Y H:i')
-                    ->label('Tanggal'),
-
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('model_name')
-                    ->searchable()
-                    ->label('Laptop'),
-
+                    ->label('Laptop')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('brand.name')
+                    ->label('Brand')
                     ->badge(),
-
                 Tables\Columns\TextColumn::make('expected_price')
+                    ->label('Ekspektasi User')
                     ->money('IDR')
-                    ->label('Ekspektasi User'),
-
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('admin_offer_price')
+                    ->label('Tawaran Toko')
                     ->money('IDR')
-                    ->placeholder('Belum diisi')
-                    ->label('Tawaran Toko'),
-
-                Tables\Columns\BadgeColumn::make('status')
-                    ->colors([
-                        'warning' => 'pending',
-                        'info' => 'negotiating',
-                        'success' => 'accepted',
-                        'danger' => 'rejected',
-                        'gray' => 'completed',
-                    ]),
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'negotiating' => 'info',
+                        'accepted' => 'success',
+                        'rejected' => 'danger',
+                        'completed' => 'gray',
+                    }),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Pending (Belum Direspon)',
+                        'negotiating' => 'Dalam Negosiasi',
+                        'accepted' => 'Disetujui / Deal',
+                        'rejected' => 'Ditolak',
+                        'completed' => 'Selesai (Sudah Dibeli)',
+                    ])
+                    ->label('Filter Status'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                
+                // Action 1: Cetak Nota PDF
+                Tables\Actions\Action::make('cetak_nota')
+                    ->label('Cetak Nota')
+                    ->icon('heroicon-o-printer')
+                    ->color('info')
+                    ->url(fn (Offer $record) => route('admin.offers.pdf', $record->id))
+                    ->openUrlInNewTab(),
 
-                // Tombol Kustom: Konversi ke Stok Katalog
-                Tables\Actions\Action::make('convert_to_laptop')
+                // Action 2: Convert ke Stok Katalog
+                Tables\Actions\Action::make('jadikan_stok')
                     ->label('Jadikan Stok Katalog')
-                    ->icon('heroicon-o-arrow-path')
+                    ->icon('heroicon-o-plus-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->modalHeading('Konversi Penawaran ke Stok Toko')
-                    ->modalDescription('Apakah Anda yakin ingin memasukkan unit ini ke katalog laptop yang dijual?')
                     ->action(function (Offer $record) {
                         Laptop::create([
                             'brand_id' => $record->brand_id,
-                            'title' => $record->model_name,
-                            'slug' => \Illuminate\Support\Str::slug($record->model_name . '-' . rand(100, 999)),
-                            'processor' => $record->processor,
-                            'ram' => $record->ram,
-                            'storage' => $record->storage,
+                            'name' => $record->model_name,
+                            'processor' => 'Processor Laptop Bekas',
+                            'ram' => 8,
+                            'storage' => '256GB SSD',
                             'price' => $record->admin_offer_price ?? $record->expected_price,
-                            'condition_grade' => 'Mulus',
-                            'description' => "Unit bekas buyback dari pelanggan.\nCatatan kondisi: " . $record->condition_description,
-                            'status' => 'available',
+                            'stock' => 1,
+                            'condition' => 'Second',
+                            'description' => $record->description,
+                            'image' => $record->image,
                         ]);
 
                         $record->update(['status' => 'completed']);
 
                         Notification::make()
-                            ->title('Berhasil!')
-                            ->body('Laptop berhasil ditambahkan ke Katalog Toko!')
+                            ->title('Berhasil Konversi')
+                            ->body('Laptop berhasil ditambahkan ke Stok Katalog Toko.')
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (Offer $record) => in_array($record->status, ['accepted', 'completed'])),
+                    ->visible(fn (Offer $record) => $record->status !== 'completed'),
             ]);
     }
 
