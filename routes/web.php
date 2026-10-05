@@ -5,9 +5,25 @@ use App\Http\Controllers\LaptopOfferController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CatalogController;
 use App\Models\LaptopOffer;
+use App\Models\laptop;
+use App\Models\Brand;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/', function () {
+    $featuredLaptops = Laptop::with('brand')
+        ->where('status', 'available')
+        ->latest()
+        ->take(6)
+        ->get();
+
+    $brands = Brand::withCount(['laptops' => function($q) {
+        $q->where('status', 'available');
+    }])->get();
+
+    return view('welcome', compact('featuredLaptops', 'brands'));
+})->name('home');
 
     Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
     Route::get('/katalog/{slug}', [CatalogController::class, 'show'])->name('catalog.show');   
