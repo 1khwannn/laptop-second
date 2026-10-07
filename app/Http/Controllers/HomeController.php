@@ -12,6 +12,9 @@ class HomeController extends Controller
     {
         $brands = Brand::orderBy('name')->get();
 
+        // Ambil data untuk section produk unggulan di beranda
+        $featuredLaptops = Laptop::with('brand')->where('status', 'available')->latest()->take(6)->get();
+
         $query = Laptop::with('brand')->where('status', 'available');
 
         // Filter berdasarkan Merek
@@ -32,6 +35,7 @@ class HomeController extends Controller
 
         $laptops = $query->latest()->paginate(9)->withQueryString();
 
-        return view('welcome', compact('laptops', 'brands'));
+        // Kirim $featuredLaptops dan $laptops sekaligus ke view
+        return view('welcome', compact('featuredLaptops', 'laptops', 'brands'));
     }
 }

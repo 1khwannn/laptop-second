@@ -8,6 +8,27 @@ use Illuminate\Http\Request;
 
 class LaptopOfferController extends Controller
 {
+    // Menampilkan daftar penawaran masuk untuk Admin
+    public function adminIndex()
+    {
+        $offers = LaptopOffer::with(['user', 'brand'])->latest()->get();
+        return view('admin.offers.index', compact('offers'));
+    }
+
+    // Mengubah status penawaran
+    public function updateStatus(Request $request, LaptopOffer $offer)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,negotiating,accepted,rejected,completed'
+        ]);
+
+        $offer->update([
+            'status' => $request->status
+        ]);
+
+        return back()->with('success', 'Status penawaran berhasil diperbarui!');
+    }
+
     // Tampilkan Form Pengajuan Jual Laptop
     public function create(Request $request)
     {

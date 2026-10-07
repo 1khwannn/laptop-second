@@ -1,94 +1,58 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-bold text-xl text-white leading-tight">
-            💻 Form Penawaran Jual Laptop
-        </h2>
-    </x-slot>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Jual / Tukar Tambah Laptop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="max-w-3xl mx-auto px-4 py-10">
+        <a href="/dashboard" class="text-blue-600 font-semibold mb-6 inline-block">&larr; Kembali ke Dashboard</a>
+        
+        <div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Formulir Pengajuan Penawaran Laptop</h1>
+            <p class="text-gray-500 text-sm mb-6">Isi spesifikasi laptop Anda dengan jujur agar admin dapat memberikan estimasi harga terbaik.</p>
 
-    <div class="py-12 bg-slate-950 min-h-screen text-slate-100">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
-                
-                @if(session('success'))
-                    <div class="mb-6 p-4 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-xl text-sm">
-                        {{ session('success') }}
-                    </div>
-                @endif
+            <form action="{{ route('offers.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul / Model Laptop</label>
+                    <input type="text" name="title" required placeholder="Contoh: ASUS TUF Gaming F15 Second" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
 
-                <form action="{{ route('offers.store') }}" method="POST" class="space-y-6">
-                    @csrf
-
-                    <!-- Pilih Brand -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                            Merek Laptop
-                        </label>
-                        <select name="brand_id" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <option value="">-- Pilih Brand --</option>
-                            @foreach($brands as $brand)
-                                <option value="{{ $brand->id }}" {{ (old('brand_id', $selectedBrand) == $brand->id) ? 'selected' : '' }}>
-                                    {{ $brand->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('brand_id') <span class="text-xs text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prosesor</label>
+                        <input type="text" name="processor" required placeholder="Contoh: Intel Core i5-11400H" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
-
-                    <!-- Tipe / Seri Laptop -->
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                            Tipe / Seri Laptop
-                        </label>
-                        <input type="text" name="model_name" value="{{ old('model_name') }}" required placeholder="Contoh: Asus ROG Strix G512LI / Lenovo Ideapad Slim 3" 
-                               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        @error('model_name') <span class="text-xs text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                        <label class="block text-sm font-medium text-gray-700 mb-1">RAM</label>
+                        <input type="text" name="ram" required placeholder="Contoh: 8GB DDR4" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
+                </div>
 
-                    <!-- Spesifikasi -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Processor</label>
-                            <input type="text" name="processor" value="{{ old('processor') }}" required placeholder="Intel Core i5 Gen 11" 
-                                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">RAM</label>
-                            <input type="text" name="ram" value="{{ old('ram') }}" required placeholder="8 GB" 
-                                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Storage</label>
-                            <input type="text" name="storage" value="{{ old('storage') }}" required placeholder="512 GB SSD" 
-                                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                    </div>
-
-                    <!-- Kondisi & Kelengkapan -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                            Kondisi Fisik & Kelengkapan
-                        </label>
-                        <textarea name="condition_description" rows="4" required placeholder="Contoh: Kondisi 90% mulus, charger ori ada, dus ada, minus baterai agak drop." 
-                                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">{{ old('condition_description') }}</textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Penyimpanan (Storage)</label>
+                        <input type="text" name="storage" required placeholder="Contoh: 512GB SSD NVMe" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
-
-                    <!-- Ekspektasi Harga -->
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                            Ekspektasi Harga Penjualan (Rp)
-                        </label>
-                        <input type="number" name="expected_price" value="{{ old('expected_price') }}" required placeholder="5000000" 
-                               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Harga yang Diinginkan (Rp)</label>
+                        <input type="number" name="expected_price" required placeholder="Contoh: 6500000" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
+                </div>
 
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition">
-                        Kirim Penawaran ke Admin
-                    </button>
-                </form>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan Minus / Kondisi Fisik</label>
+                    <textarea name="description" rows="3" placeholder="Sebutkan jika ada lecet pemakaian atau kendala minor..." class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                </div>
 
-            </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-md">
+                    Kirim Penawaran ke Admin
+                </button>
+            </form>
         </div>
     </div>
-</x-app-layout>
+</body>
+</html>

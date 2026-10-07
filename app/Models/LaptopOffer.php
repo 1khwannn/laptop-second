@@ -11,6 +11,7 @@ class LaptopOffer extends Model
         'user_id',
         'brand_id',
         'model_name',
+        'phone_number',
         'processor',
         'ram',
         'storage',

@@ -36,5 +36,8 @@ class CatalogController extends Controller
         $waUrl = "https://wa.me/{$waNumber}?text={$waText}";
 
         return view('catalog.show', compact('laptop', 'waUrl'));
+
+        $laptop = Laptop::with('brand')->where('slug', $slug)->firstOrFail();
+        return view('laptops.show', compact('laptop'));
     }
 }
